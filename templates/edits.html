@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="edit-wrap">
+  <div class="card edit-card">
+    <h3>Edit Expense #{{ expense.id }}</h3>
+    <form action="{{ url_for('edit', expense_id=expense.id) }}" method="post" class="expense-form">
+      <label>Amount
+        <input type="number" name="amount" step="0.01" min="0" required value="{{ '%.2f'|format(expense.amount) }}">
+      </label>
+
+      <label>Category
+        <input type="text" name="category" required value="{{ expense.category }}">
+      </label>
+
+      <label>Description
+        <input type="text" name="description" value="{{ expense.description }}">
+      </label>
+
+      <label>Date
+        <input type="date" name="date" required value="{{ expense.date }}">
+      </label>
+
+      <div class="form-actions">
+        <button type="submit" class="btn">Save</button>
+        <a href="{{ url_for('index') }}" class="btn secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

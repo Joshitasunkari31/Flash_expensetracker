@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="controls">
+  <div class="card filters-card">
+    <h3>Filters</h3>
+    <form method="get" class="filters-form">
+      <div class="row">
+        <label>Start
+          <input type="date" name="start" value="{{ start }}">
+        </label>
+        <label>End
+          <input type="date" name="end" value="{{ end }}">
+        </label>
+        <label>Category
+          <select name="category">
+            <option value="All" {% if selected_category == 'All' %}selected{% endif %}>All</option>
+            {% for c in categories %}
+            <option value="{{ c }}" {% if selected_category == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <div class="actions-inline">
+          <button class="btn apply" type="submit">Apply</button>
+          <a class="btn reset" href="{{ url_for('index') }}">Reset</a>
+        </div>
+      </div>
+    </form>
+
+    <div class="meta">
+      <div class="meta-item">Total: <span class="badge">${{ '%.2f'|format(total) }}</span></div>
+      <div class="meta-item"><a class="link-muted" href="#">Export CSV (current filter)</a></div>
+    </div>
+  </div>
+
+  <div class="card add-card">
+    <h3>Add Expense</h3>
+    <form action="{{ url_for('add') }}" method="post" class="expense-form">
+      <label>Description
+        <input type="text" name="description" placeholder="e.g., Groceries">
+      </label>
+
+      <div class="two-col">
+        <label>Amount
+          <input type="number" name="amount" step="0.01" min="0" required placeholder="0.00">
+        </label>
+        <label>Date
+          <input type="date" name="date" required value="{{ '' }}">
+        </label>
+      </div>
+
+      <label>Category
+        <input type="text" name="category" required placeholder="Food, Transport, ...">
+      </label>
+
+      <div class="form-actions">
+        <button type="submit" class="btn">Add Expense</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<section class="summary">
+  <div class="card charts-card">
+    <h3>By Category</h3>
+    <div class="chart-wrap">
+      <canvas id="categoryPie"></canvas>
+    </div>
+  </div>
+
+  <div class="card charts-card">
+    <h3>Spending Over Time</h3>
+    <div class="chart-wrap">
+      <canvas id="timeBar"></canvas>
+    </div>
+  </div>
+</section>
+
+<section class="table-section">
+  <div class="card table-card">
+    <h3>Expenses</h3>
+    {% if expenses %}
+    <table class="expense-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Description</th>
+          <th>Category</th>
+          <th class="amount-col">Amount</th>
+          <th class="actions-col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for expense in expenses %}
+        <tr>
+          <td>{{ expense.date }}</td>
+          <td>{{ expense.description }}</td>
+          <td>{{ expense.category }}</td>
+          <td class="amount-col">${{ '%.2f'|format(expense.amount) }}</td>
+          <td class="actions-col">
+            <a class="btn small" href="{{ url_for('edit', expense_id=expense.id) }}">Edit</a>
+            <form action="{{ url_for('delete', expense_id=expense.id) }}" method="post" class="inline-form" onsubmit="return confirm('Delete this expense?');">
+              <button type="submit" class="btn danger small">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p class="muted">No expenses yet. Add one with the form.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Data passed from Flask (use tojson so editor/linter and runtime get valid JS)
+  const catLabels  = {{ category_labels | default([]) | tojson }};
+  const catValues  = {{ category_values | default([]) | tojson }};
+  const dateLabels = {{ date_labels | default([]) | tojson }};
+  const dateValues = {{ date_values | default([]) | tojson }};
+
+  // Initialize charts (Chart.js)
+  const pieCtx = document.getElementById('categoryPie').getContext('2d');
+  const pieChart = new Chart(pieCtx, {
+    type: 'pie',
+    data: {
+      labels: catLabels,
+      datasets: [{
+        data: catValues,
+        backgroundColor: [
+          '#2DB7F5', '#FF6B88', '#FFB74D', '#9CCC65', '#BA68C8', '#4DD0E1'
+        ],
+        borderColor: '#0b1520',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      plugins: { legend: { position: 'top', labels: { color: '#cbd5e1' } } }
+    }
+  });
+
+  const barCtx = document.getElementById('timeBar').getContext('2d');
+  const barChart = new Chart(barCtx, {
+    type: 'bar',
+    data: {
+      labels: dateLabels,
+      datasets: [{
+        label: 'Total',
+        data: dateValues,
+        backgroundColor: '#2D6EA6'
+      }]
+    },
+    options: {
+      scales: {
+        x: { ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(255,255,255,0.03)' } },
+        y: { ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(255,255,255,0.03)' } }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Expense Tracker Lite</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="topbar">
+    <div class="logo">
+      <span class="accent">Expense</span> Tracker Lite
+    </div>
+  </div>
+
+  <div class="page">
+    <header class="page-header">
+      <h1>Dashboard</h1>
+      <p class="subtitle">Track spending, filter by date/category, and visualize instantly.</p>
+    </header>
+
+    <main class="container">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+      <small>Built with Flask • SQLite • Jinja2</small>
+    </footer>
+  </div>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>
